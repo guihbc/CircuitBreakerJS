@@ -3,3 +3,5 @@ class CircuitBreakerTimeoutError extends Error {
         super(`Timeout ${timeout}ms exceeded for ${functionName}`);
     }
 }
+
+module.exports = CircuitBreakerTimeoutError;

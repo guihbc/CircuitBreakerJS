@@ -41,6 +41,7 @@ class CircuitBreaker {
                 this.state = HALF_OPEN;
                 this.halfOpenAttempts = 0;
             } else {
+                console.log('Circuit OPEN returning fallback');
                 return fallback;
             }
         }
@@ -48,14 +49,21 @@ class CircuitBreaker {
         if (this.state === HALF_OPEN && this.halfOpenAttempts > this.maxHalfOpenAttempts) {
             this.trip();
             return fallback;
+        } else {
+            this.halfOpenAttempts++;
         }
 
         try {
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new CircuitBreakerTimeoutError(this.timeout, this.callFn.name)), this.timeout);
+            const timeoutPromise = new Promise((resolve, _) => {
+                setTimeout(() => resolve(new CircuitBreakerTimeoutError(this.timeout, this.callFn.name)), this.timeout);
             });
 
             const result = await Promise.race([this.callFn(...args), timeoutPromise]);
+
+            if (result instanceof CircuitBreakerTimeoutError) {
+                throw result;
+            }
+
             this.reset();
             this.successCount++;
             return result;
@@ -63,7 +71,9 @@ class CircuitBreaker {
             this.errorCount++;
             const totalCount = this.successCount + this.errorCount;
             const errorRate = (this.errorCount/totalCount) * 100;
-            console.log(`Circuit Breaker error rate: ${errorRate}%`);
+
+            console.warn(error.message);
+            console.log(`Circuit Breaker error rate: ${errorRate}% | [${this.errorCount}/${this.successCount}] total: ${totalCount}`);
 
             if (errorRate >= this.percentThreshold &&
                 (this.state === CLOSED || (this.state === HALF_OPEN && this.halfOpenAttempts > this.maxHalfOpenAttempts))) {
@@ -79,14 +89,14 @@ class CircuitBreaker {
      */
     reset() {
         this.errorCount = 0;
-        this.halfOpenAttempts = 0;
         
         if (this.state === HALF_OPEN) {
             this.successCount = 0;
+            this.halfOpenAttempts = 0;
         }
 
         this.state = CLOSED;
-        console.log('Circuit Breaker State: CLOSED');
+        console.log('Circuit Breaker State changed: CLOSED');
     }
 
     /**
@@ -95,6 +105,8 @@ class CircuitBreaker {
     trip() {
         this.state = OPEN;
         this.nextAttempt = Date.now() + this.timeToRecover;
-        console.warn('Circuit Breaker State: OPEN');
+        console.warn('Circuit Breaker State changed: OPEN');
     }
 }
+
+module.exports = CircuitBreaker;

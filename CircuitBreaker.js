@@ -41,7 +41,7 @@ class CircuitBreaker {
                 this.state = HALF_OPEN;
                 this.halfOpenAttempts = 0;
             } else {
-                console.log('Circuit OPEN returning fallback');
+                console.info('Circuit OPEN returning fallback');
                 return fallback;
             }
         }
@@ -73,7 +73,7 @@ class CircuitBreaker {
             const errorRate = (this.errorCount/totalCount) * 100;
 
             console.warn(error.message);
-            console.log(`Circuit Breaker error rate: ${errorRate}% | [${this.errorCount}/${this.successCount}] total: ${totalCount}`);
+            console.info(`Circuit Breaker error rate: ${errorRate}% | [${this.errorCount}/${this.successCount}] total: ${totalCount}`);
 
             if (errorRate >= this.percentThreshold &&
                 (this.state === CLOSED || (this.state === HALF_OPEN && this.halfOpenAttempts > this.maxHalfOpenAttempts))) {
@@ -96,7 +96,7 @@ class CircuitBreaker {
         }
 
         this.state = CLOSED;
-        console.log('Circuit Breaker State changed: CLOSED');
+        console.info('Circuit Breaker State changed: CLOSED');
     }
 
     /**

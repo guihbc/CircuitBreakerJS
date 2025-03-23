@@ -1,4 +1,4 @@
-import CircuitBreaker from "../CircuitBreaker";
+import SimpleCircuitBreaker from "../SimpleCircuitBreaker";
 import CircuitBreakerState from "../CircuitBreakerState";
 
 const SUCCESS = "SUCCESS";
@@ -14,7 +14,7 @@ const timeoutTestFn = () => {
 }
 
 test('should return fallback when circuit breaker is tripped', async () => {
-    const testCircuitBreaker = new CircuitBreaker(testFn, {
+    const testCircuitBreaker = new SimpleCircuitBreaker(testFn, {
         threshold: 3,
         timeout: 500,
         timeToRecover: 60000,
@@ -32,7 +32,7 @@ test('should return fallback when circuit breaker is tripped', async () => {
 });
 
 test('should return SUCCESS', async () => {
-    const testCircuitBreaker = new CircuitBreaker(testFn, {
+    const testCircuitBreaker = new SimpleCircuitBreaker(testFn, {
         threshold: 3,
         timeout: 500,
         timeToRecover: 60000,
@@ -44,7 +44,7 @@ test('should return SUCCESS', async () => {
 });
 
 test('should return ERROR when function times out', async () => {
-    const testCircuitBreaker = new CircuitBreaker(timeoutTestFn, {
+    const testCircuitBreaker = new SimpleCircuitBreaker(timeoutTestFn, {
         threshold: 3,
         timeout: 100,
         timeToRecover: 60000,
@@ -56,7 +56,7 @@ test('should return ERROR when function times out', async () => {
 });
 
 test('should return state to CLOSED', async () => {
-    const testCircuitBreaker = new CircuitBreaker(testFn, {
+    const testCircuitBreaker = new SimpleCircuitBreaker(testFn, {
         threshold: 1,
         timeout: 300,
         timeToRecover: 150,
@@ -76,7 +76,7 @@ test('should return state to CLOSED', async () => {
 });
 
 test('should keep half open when functions keeps with error', async () => {
-    const testCircuitBreaker = new CircuitBreaker(testFn, {
+    const testCircuitBreaker = new SimpleCircuitBreaker(testFn, {
         threshold: 3,
         timeout: 300,
         timeToRecover: 150,
@@ -96,7 +96,7 @@ test('should keep half open when functions keeps with error', async () => {
 });
 
 test('should back state to OPEN if maxHalfOpenAttempts exceeded', async () => {
-    const testCircuitBreaker = new CircuitBreaker(testFn, {
+    const testCircuitBreaker = new SimpleCircuitBreaker(testFn, {
         threshold: 1,
         timeout: 300,
         timeToRecover: 150,

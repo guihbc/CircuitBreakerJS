@@ -10,13 +10,19 @@ export default abstract class CircuitBreaker {
     nextAttempt: number = Date.now();
     state: CircuitBreakerState = CircuitBreakerState.CLOSED;
     
-    config: CircuitBreakerConfig = {
+    protected config: CircuitBreakerConfig = {
         threshold: 0,
         timeout: 0,
         timeToRecover: 0,
         maxHalfOpenAttempts: 0
     };
 
+    /**
+     * Execute the function applying the circuit braker pattern
+     * @param {any} fallback - Return fallback if the function fails
+     * @param  {...any} args  - Arguments passed to the calling function
+     * @returns {Promise<any>}
+     */
     abstract execute(fallback: any, ...args: any): Promise<any>;
     
     /**

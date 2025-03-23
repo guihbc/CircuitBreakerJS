@@ -27,12 +27,6 @@ export default class SimpleCircuitBreaker extends CircuitBreaker {
         this.nextAttempt = Date.now();
     }
 
-    /**
-     * Execute the function applying the circuit braker pattern
-     * @param {any} fallback - Fallback if the function fails
-     * @param  {...any} args  - Arguments for the calling function
-     * @returns {Promise<any>}
-     */
     async execute(fallback: any, ...args: any): Promise<any> {
         const { OPEN, CLOSED, HALF_OPEN } = CircuitBreakerState;
 

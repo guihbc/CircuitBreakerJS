@@ -1,5 +1,7 @@
 import SimpleCircuitBreaker from "../SimpleCircuitBreaker";
 import CircuitBreakerState from "../CircuitBreakerState";
+import RedisCircuitBreaker from "../RedisCircuitBreaker";
+import { createClient } from "redis";
 
 const SUCCESS = "SUCCESS";
 const ERROR = "ERROR";

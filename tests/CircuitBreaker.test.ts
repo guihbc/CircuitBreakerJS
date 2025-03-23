@@ -15,7 +15,7 @@ const timeoutTestFn = () => {
 
 test('should return fallback when circuit breaker is tripped', async () => {
     const testCircuitBreaker = new CircuitBreaker(testFn, {
-        percentThreshold: 30,
+        threshold: 3,
         timeout: 500,
         timeToRecover: 60000,
         maxHalfOpenAttempts: 1
@@ -24,7 +24,7 @@ test('should return fallback when circuit breaker is tripped', async () => {
     for (let i = 1; i <= 10; i++) {
         const result = await testCircuitBreaker.execute(ERROR, i);
         const expectedResult = i <= 3 ? SUCCESS : ERROR;
-        const expectedState = i <= 4 ? CircuitBreakerState.CLOSED : CircuitBreakerState.OPEN;
+        const expectedState = i <= 6 ? CircuitBreakerState.CLOSED : CircuitBreakerState.OPEN;
 
         expect(result).toBe(expectedResult);
         expect(testCircuitBreaker.state).toBe(expectedState);
@@ -33,7 +33,7 @@ test('should return fallback when circuit breaker is tripped', async () => {
 
 test('should return SUCCESS', async () => {
     const testCircuitBreaker = new CircuitBreaker(testFn, {
-        percentThreshold: 30,
+        threshold: 3,
         timeout: 500,
         timeToRecover: 60000,
         maxHalfOpenAttempts: 1
@@ -45,7 +45,7 @@ test('should return SUCCESS', async () => {
 
 test('should return ERROR when function times out', async () => {
     const testCircuitBreaker = new CircuitBreaker(timeoutTestFn, {
-        percentThreshold: 30,
+        threshold: 3,
         timeout: 100,
         timeToRecover: 60000,
         maxHalfOpenAttempts: 1
@@ -57,15 +57,15 @@ test('should return ERROR when function times out', async () => {
 
 test('should return state to CLOSED', async () => {
     const testCircuitBreaker = new CircuitBreaker(testFn, {
-        percentThreshold: 30,
+        threshold: 1,
         timeout: 300,
         timeToRecover: 150,
         maxHalfOpenAttempts: 1
     });
 
-    const result = await testCircuitBreaker.execute(ERROR, 4);
-    expect(result).toBe(ERROR);
-    expect(testCircuitBreaker.state).toBe(CircuitBreakerState.OPEN);
+    // simulate the state is OPEN
+    testCircuitBreaker.state = CircuitBreakerState.OPEN;
+    testCircuitBreaker.nextAttempt = Date.now() + testCircuitBreaker.config.timeToRecover;
 
     // await 200ms to recover
     await timeoutTestFn();
@@ -75,17 +75,17 @@ test('should return state to CLOSED', async () => {
     expect(testCircuitBreaker.state).toBe(CircuitBreakerState.CLOSED);
 });
 
-test('should keep half closed when functions keeps with error', async () => {
+test('should keep half open when functions keeps with error', async () => {
     const testCircuitBreaker = new CircuitBreaker(testFn, {
-        percentThreshold: 30,
+        threshold: 3,
         timeout: 300,
         timeToRecover: 150,
         maxHalfOpenAttempts: 1
     });
 
-    const result = await testCircuitBreaker.execute(ERROR, 4);
-    expect(result).toBe(ERROR);
-    expect(testCircuitBreaker.state).toBe(CircuitBreakerState.OPEN);
+    // simulate the state is OPEN
+    testCircuitBreaker.state = CircuitBreakerState.OPEN;
+    testCircuitBreaker.nextAttempt = Date.now() + testCircuitBreaker.config.timeToRecover;
 
     // await 200ms to recover
     await timeoutTestFn();
@@ -97,22 +97,21 @@ test('should keep half closed when functions keeps with error', async () => {
 
 test('should back state to OPEN if maxHalfOpenAttempts exceeded', async () => {
     const testCircuitBreaker = new CircuitBreaker(testFn, {
-        percentThreshold: 30,
+        threshold: 1,
         timeout: 300,
         timeToRecover: 150,
         maxHalfOpenAttempts: 1
     });
 
-    const result = await testCircuitBreaker.execute(ERROR, 4);
-    expect(result).toBe(ERROR);
-    expect(testCircuitBreaker.state).toBe(CircuitBreakerState.OPEN);
+    // simulate the state is OPEN
+    testCircuitBreaker.state = CircuitBreakerState.OPEN;
+    testCircuitBreaker.nextAttempt = Date.now() + testCircuitBreaker.config.timeToRecover;
 
     // await 200ms to recover
     await timeoutTestFn();
 
     const secondResult = await testCircuitBreaker.execute(ERROR, 4);
     expect(secondResult).toBe(ERROR);
-
     expect(testCircuitBreaker.state).toBe(CircuitBreakerState.HALF_OPEN);
 
     const thirdResult = await testCircuitBreaker.execute(ERROR, 4);

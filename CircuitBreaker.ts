@@ -8,7 +8,6 @@ export default class CircuitBreaker implements ICircuitBreaker {
     config: CircuitBreakerConfig;
     state: CircuitBreakerState;
     errorCount: number;
-    successCount: number;
     halfOpenAttempts: number;
     nextAttempt: number;
 
@@ -22,7 +21,6 @@ export default class CircuitBreaker implements ICircuitBreaker {
         this.config = config;
         
         this.errorCount = 0;
-        this.successCount = 0;
         this.halfOpenAttempts = 0
         this.state = CircuitBreakerState.CLOSED;
         this.nextAttempt = Date.now();
@@ -66,17 +64,14 @@ export default class CircuitBreaker implements ICircuitBreaker {
             }
 
             this.reset();
-            this.successCount++;
             return result;
         } catch(error: any) {
             this.errorCount++;
-            const totalCount = this.successCount + this.errorCount;
-            const errorRate = (this.errorCount/totalCount) * 100;
+            
+            console.error(error.message);
+            console.info(`Circuit Breaker error count: ${this.errorCount}`);
 
-            console.warn(error.message);
-            console.info(`Circuit Breaker error rate: ${errorRate}% | [${this.errorCount}/${this.successCount}] total: ${totalCount}`);
-
-            if (errorRate >= this.config.percentThreshold &&
+            if (this.errorCount > this.config.threshold &&
                 (this.state === CLOSED || (this.state === HALF_OPEN && this.halfOpenAttempts > this.config.maxHalfOpenAttempts))) {
                 this.trip();
             }
@@ -92,7 +87,6 @@ export default class CircuitBreaker implements ICircuitBreaker {
         this.errorCount = 0;
         
         if (this.state === CircuitBreakerState.HALF_OPEN) {
-            this.successCount = 0;
             this.halfOpenAttempts = 0;
         }
 

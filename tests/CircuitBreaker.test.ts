@@ -112,7 +112,7 @@ test('should back state to OPEN if maxHalfOpenAttempts exceeded', async () => {
 
     const secondResult = await testCircuitBreaker.execute(ERROR, 4);
     expect(secondResult).toBe(ERROR);
--
+
     expect(testCircuitBreaker.state).toBe(CircuitBreakerState.HALF_OPEN);
 
     const thirdResult = await testCircuitBreaker.execute(ERROR, 4);
